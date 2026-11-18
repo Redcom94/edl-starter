@@ -62,20 +62,35 @@ describe('completionRate', () => {
     // ARRANGE : 4 tâches, dont 2 avec le statut 'done'
     // ACT     : appeler completionRate(tasks)
     // ASSERT  : le résultat doit valoir 50
-    throw new Error('Test à écrire (TP 1 - Exercice 4)');
+    const tasks = [
+      { status: 'todo' },
+      { status: 'todo' },
+      { status: 'done' },
+      { status: 'done' },
+    ];
+    const counts = completionRate(tasks);
+
+    expect(counts).toEqual(50)
   });
 
   it('renvoie 100 quand toutes les tâches sont terminées', () => {
     // ARRANGE : 2 tâches, toutes les deux 'done'
     // ACT     : appeler completionRate(tasks)
     // ASSERT  : le résultat doit valoir 100
-    throw new Error('Test à écrire (TP 1 - Exercice 4)');
+        const tasks = [
+      { status: 'done' },
+      { status: 'done' },
+    ];
+    const counts = completionRate(tasks);
+
+    expect(counts).toEqual(100)
   });
 
   it('renvoie 0 pour une liste vide', () => {
-    // ARRANGE : une liste vide []
-    // ACT     : appeler completionRate([])
-    // ASSERT  : le résultat doit valoir 0
-    throw new Error('Test à écrire (TP 1 - Exercice 4)');
+    const tasks = [
+    ];
+    const counts = completionRate(tasks);
+
+    expect(counts).toEqual(0)
   });
 });

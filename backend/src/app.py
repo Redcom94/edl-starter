@@ -143,7 +143,8 @@ async def health_check():
 async def get_tasks(
     status: Optional[TaskStatus] = None,
     priority: Optional[TaskPriority] = None,
-    assignee: Optional[str] = None
+    assignee: Optional[str] = None,
+    search: Optional[str] = None
 ) -> List[Task]:
     """
     Get all tasks with optional filtering.
@@ -152,23 +153,29 @@ async def get_tasks(
     - status: Filter by task status (todo, in_progress, done)
     - priority: Filter by priority (low, medium, high)
     - assignee: Filter by assignee email
+    - search: Filter by title content (case-insensitive)
     """
     tasks = list(tasks_db.values())
 
-    # Apply filters
+    # Appliquer les filtres exacts
     if status:
         tasks = [t for t in tasks if t.status == status]
     if priority:
         tasks = [t for t in tasks if t.priority == priority]
     if assignee:
         tasks = [t for t in tasks if t.assignee == assignee]
+        
+    # Appliquer le filtre de recherche (insensible à la casse)
+    if search:
+        search_lower = search.lower()
+        tasks = [t for t in tasks if search_lower in t.title.lower()]
 
     return tasks
-
 
 @app.get("/tasks/{task_id}", response_model=Task)
 async def get_task(task_id: int) -> Task:
     """Get a single task by ID."""
+
     if task_id not in tasks_db:
         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
     return tasks_db[task_id]
@@ -204,41 +211,30 @@ async def create_task(task_data: TaskCreate) -> Task:
 
 @app.put("/tasks/{task_id}", response_model=Task)
 async def update_task(task_id: int, updates: TaskUpdate) -> Task:
-    """
-    Update an existing task (partial update supported).
-
-    TODO (TP 1 - Exercice 2) : écrire cette fonction.
-
-    Comportement attendu (c'est ce que vos tests test_update_* doivent vérifier) :
-    - 404 si la tâche n'existe pas (même message que get_task) ;
-    - seuls les champs envoyés par le client sont modifiés, les autres restent identiques ;
-    - created_at ne change pas, updated_at prend la date actuelle ;
-    - renvoie la tâche mise à jour.
-
-    Indices :
-    - create_task() montre comment construire une Task ;
-    - updates.model_dump(exclude_unset=True) renvoie un dictionnaire contenant
-      uniquement les champs envoyés, par exemple {"status": "done"}.
-    """
-    # TODO: Votre code ici
-    raise HTTPException(status_code=501, detail="Update not implemented yet - complete this function!")
-
+    try :
+        await get_task(task_id)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    task = tasks_db[task_id]
+    update_data = updates.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task,key,value)
+    task.updated_at = datetime.now(timezone.utc)
+    tasks_db[task_id] = task
+    return task
 
 @app.delete("/tasks/{task_id}", status_code=204)
 async def delete_task(task_id: int):
-    """
-    Delete a task by ID.
+    try :
+        await get_task(task_id)
+    except HTTPException:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    del tasks_db[task_id]
 
-    TODO (TP 1 - Exercice 1) : écrire cette fonction.
 
-    Comportement attendu (c'est ce que vos tests test_delete_* doivent vérifier) :
-    - 404 si la tâche n'existe pas (même message que get_task) ;
-    - sinon, la tâche est retirée de tasks_db et la réponse est vide (204).
 
-    Indice : get_task(), plus haut dans ce fichier, vérifie déjà si une tâche existe.
-    """
-    # TODO: Votre code ici
-    raise HTTPException(status_code=501, detail="Delete not implemented yet - complete this function!")
+    
+    #raise HTTPException(status_code=501, detail="Delete not implemented yet - complete this function!")
 
 
 if __name__ == "__main__":  # pragma: no cover (lancement manuel, pas testé)
