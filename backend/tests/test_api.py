@@ -15,6 +15,33 @@ import pytest
 # =============================================================================
 # PARTIE 1 : TESTS EXEMPLES (Apprenez de ceux-ci !)
 # =============================================================================
+def test_create_task_with_invalid_priority(client):
+    # ARRANGE : Préparer les données
+    new_task = {
+        "title": "Acheter des courses",
+        "description": "Lait, œufs, pain",
+        "priority" : "HIGH"
+    }
+    new_task_2 = {
+        "title": "Acheter des courses",
+        "description": "Lait, œufs, pain",
+        "priority" : ""
+    }
+
+    new_task_3 = {
+        "title": "Acheter des courses",
+        "description": "Lait, œufs, pain",
+        "priority" : "urgent"
+    }
+    # ACT : Envoyer la requête POST
+    response = client.post("/tasks", json=new_task)
+    response_2 = client.post("/tasks", json= new_task_2)
+    response_3 = client.post("/tasks", json= new_task_3)
+
+    # ASSERT : Vérifier la réponse
+    assert response.status_code == 422
+    assert response_2.status_code == 422
+    assert response_3.status_code == 422
 
 def test_root_endpoint(client):
     """
