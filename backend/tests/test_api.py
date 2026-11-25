@@ -331,6 +331,11 @@ def test_search_tasks_by_assignee(client):
     assert len(data) == 1
     assignee = [task["assignee"] for task in data ]
     assert "Michel" not in assignee
+
+def test_health_check(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "BROKEN"  # ❌ Faux exprès !    
 # =============================================================================
 # ASTUCES & CONSEILS
 # =============================================================================
